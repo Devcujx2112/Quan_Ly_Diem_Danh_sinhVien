@@ -19,5 +19,16 @@
     <file>image/search.png</file>
     <file>image/settings.png</file>
     <file>image/settings_white.png</file>
+    <file>image/logo_admin.png</file>
+    <file>image/lopHoc.png</file>
+    <file>image/diemDanh.png</file>
+    <file>image/qlyLopHoc.png</file>
+    <file>image/sinhVien.png</file>
+  <file>image/lopHoc2.png</file>
+    <file>image/diemDanh2.png</file>
+    <file>image/qlyLopHoc2.png</file>
+    <file>image/sinhVien2.png</file>
+
   </qresource>
+  <qresource/>
 </RCC>
