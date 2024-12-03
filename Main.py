@@ -8,7 +8,7 @@ import cv2
 import face_recognition
 import json
 import numpy as np
-
+import pandas as pd
 
 #__________________________________________________________________________
 #Login
@@ -127,6 +127,14 @@ class MyWindow(QMainWindow,Ui_MainWindow):
         self.btn_danhSachLop.clicked.connect(self.DanhSachSinhVienInClass)
         self.btn_xoaDS.clicked.connect(self.DeleteSinhVienInClass)
 
+
+#__________________________________________________________________________
+#Funtion diem danh
+        self.btn_danhSachDD.clicked.connect(self.ShowAllSinhVienDD)
+        self.tbl_danhSachDD.cellClicked.connect(self.OneClickSinhVienDD)
+        self.btn_xacThucKhuonMat.clicked.connect(self.XacThucFaceIDSinhVien)
+        self.btn_diemDanh.clicked.connect(self.DiemDanhSinhVien)
+        self.btn_excel.clicked.connect(self.XuatFileExcel)
 #__________________________________________________________________________
 #funtion chuyen trang
 
@@ -142,23 +150,26 @@ class MyWindow(QMainWindow,Ui_MainWindow):
         self.ShowAllLopHocInComBoBox()
         self.stackedWidget.setCurrentIndex (3)
     def switch_to_diemDanh_page(self):
+        self.ShowAllLopHocInComBoBoxDD()
         self.stackedWidget.setCurrentIndex (4)
     def switch_to_DangXuatPage(self):
         reply = ip.QMessageBox.question(self, 'Xác nhận', 
-                                     "Bạn có muốn đăng xuất không?", 
-                                     ip.QMessageBox.StandardButton.Yes | ip.QMessageBox.StandardButton.No, 
-                                     ip.QMessageBox.StandardButton.No)
+                                   "Bạn có muốn đăng xuất không?", 
+                                   ip.QMessageBox.StandardButton.Yes | ip.QMessageBox.StandardButton.No, 
+                                   ip.QMessageBox.StandardButton.No)
 
         if reply == ip.QMessageBox.StandardButton.Yes:
-            print("dang xuat")
-            
-            widget.setFixedHeight(550)
-            widget.setFixedWidth(790)
+            print("Đang xuất...")
+            self.deleteLater()
+            self.current_user = {}  
+            widget.setCurrentIndex(0)  
+            widget.setFixedHeight(5)
+            widget.setFixedWidth(5)
             widget.move(250, 100)
-            widget.setCurrentIndex(0)
-            print("Đăng xuất ngay!")
+
+            print("Đăng xuất thành công! Quay về trang đăng nhập.")
         else:
-            print("Hủy đăng xuất") 
+            print("Hủy đăng xuất")
 
 
 
@@ -258,18 +269,23 @@ class MyWindow(QMainWindow,Ui_MainWindow):
         diachi = self.txt_diaChiSV.text()
         facecoding = self.txt_faceCoding.text()
         kt = ip.DAL_SinhVien.AddSinhVien(masv,tensv,gender,khoa,diachi,facecoding)
+
+        if not masv or not tensv or not gender or not khoa or not diachi or not facecoding:
+            QMessageBox.warning(self, "Thông báo", "Vui lòng nhập đầy đủ thông tin!")
+            return
+        
         if kt == 1:
-            QMessageBox.information(self, "Thoại bao", "Thêm sinh viên thành công")
+            QMessageBox.information(self, "Thông báo", "Thêm sinh viên thành công")
             self.ShowAllSinhVien()
             self.txt_masvSV.setText("")
             self.txt_tensvSV.setText("")
-            self.ccb_genderSV.setText("")
+            self.ccb_genderSV.setCurrentText("")
             self.txt_khoaSV.setText("")
             self.txt_diaChiSV.setText("")
             self.txt_faceCoding.setText("")
 
         else:
-            QMessageBox.information(self, "Thoại bao", "Thêm sinh viên thất bại")
+            QMessageBox.information(self, "Thông báo", "Thêm sinh viên thất bại")
                    
 #Funtion Update Sinh Vien
     def UpdateSinhVien(self):
@@ -284,14 +300,14 @@ class MyWindow(QMainWindow,Ui_MainWindow):
             QMessageBox.information(self, "Thông báo", "Cập nhật thông tin sinh viên thành công")
             self.ShowAllSinhVien()
         else:
-            QMessageBox.information(self, "Thoại bao", "Cập nhật thông tin sinh viên thất bại")
+            QMessageBox.information(self, "Thông báo", "Cập nhật thông tin sinh viên thất bại")
                         
 #Funtion Delete Sinh Vien
     def DeleteSinhVien(self):
         masv = self.txt_masvSV.text()
         kt = ip.DAL_SinhVien.DeleteSinhVien(masv)
         if kt == 1:
-            QMessageBox.information(self, "Thoại bao", "Xóa sinh viên thành công")
+            QMessageBox.information(self, "Thông báo", "Xóa sinh viên thành công")
             self.ShowAllSinhVien()
             self.txt_masvSV.setText("")
             self.txt_tensvSV.setText("")
@@ -300,7 +316,7 @@ class MyWindow(QMainWindow,Ui_MainWindow):
             self.txt_diaChiSV.setText("")
             self.txt_faceCoding.setText("")
         else:
-            QMessageBox.information(self, "Thoại bao", "Xóa sinh viên thất bại")
+            QMessageBox.information(self, "Thông báo", "Xóa sinh viên thất bại")
                      
 #Funtion Search Sinh Vien
     def SearchSinhVien(self):
@@ -377,10 +393,21 @@ class MyWindow(QMainWindow,Ui_MainWindow):
         email = self.txt_emailGV.text()
         role = "0"
         
+        if not magv or not tengv or not username or not password or not gender or not diachi or not sdt or not email:
+            QMessageBox.warning(self, "Thông báo", "Vui lòng nhập đầy đủ thông tin!")
+            return
+        
         kt = ip.DAL_GiangVien.AddGiangVien(magv, tengv, username, password, gender, diachi, sdt, email, role)
         if kt == 1:
             QMessageBox.information(self, "Thông báo", "Thêm giảng viên thành công")
             self.ShowAllGiangVien()
+            self.txt_magv.setText("")
+            self.txt_tengv.setText("")
+            self.username.setText("")
+            self.password.setText("")
+            self.ccb_genderGV.setCurrentText("")
+            self.txt_sdtGV.setText("")
+            self.txt_emailGV.setText("")
         else:
             QMessageBox.information(self, "Thông báo", "Thêm giảng viên thất bại")
 
@@ -396,6 +423,10 @@ class MyWindow(QMainWindow,Ui_MainWindow):
         email = self.txt_emailGV.text()
         role = "0"
         
+        if not magv or not tengv or not username or not password or not gender or not diachi or not sdt or not email:
+            QMessageBox.warning(self, "Thông báo", "Vui lòng nhập đầy đủ thông tin!")
+            return
+
         kt = ip.DAL_GiangVien.UpdateGiangVien(magv, tengv, username, password, gender, diachi, sdt, email, role)
         if kt == 1:
             QMessageBox.information(self, "Thông báo", "Cập nhật giảng viên thành công")
@@ -490,6 +521,10 @@ class MyWindow(QMainWindow,Ui_MainWindow):
         tenlop = self.txt_tenlopHoc.text()
         soTin = self.txt_soTin.text()
 
+        if not malop or not magv or not tenlop or not soTin:
+            QMessageBox.warning(self, "Thông báo", "Vui lòng nhập đầy đủ thông tin!")
+            return
+
         kt = ip.DAL_LopHoc.AddLopHoc(malop,magv,tenlop,soTin)
         if kt == 1:
             QMessageBox.information(self, "Thông báo", "Thêm lớp học thành công")
@@ -517,7 +552,6 @@ class MyWindow(QMainWindow,Ui_MainWindow):
             QMessageBox.warning(self, "Thông báo", "Số tín chỉ phải là một số nguyên!")
             return
 
-        # Thực hiện cập nhật
         kt = ip.DAL_LopHoc.UpdateLopHoc(magv,tenlop,soTin,malop)
         if kt == 1:
             QMessageBox.information(self, "Thông báo", "Cập nhật lớp học thành công")
@@ -609,12 +643,20 @@ class MyWindow(QMainWindow,Ui_MainWindow):
         tensv = self.txt_tenSinhVienQL.text()
         masv = self.txt_masvQL.text()
 
+        if not tenlh or not gvql or not tensv or not masv:
+            QMessageBox.warning(self, "Thông báo", "Vui lòng nhập đầy đủ thông tin!")
+            return
+
         kt = ip.DAL_QuanLyLopHoc.AddSinhVienInLopHoc(tenlh,gvql,tensv,masv)
         if kt == 1:
             QMessageBox.information(self, "Thông báo", "Thêm sinh viên vào lớp thành công")
-            # self.ShowALLDanhSachLopHoc()
+            self.DanhSachSinhVienInClass()
             self.txt_tenSinhVienQL.setText("")
             self.txt_masvQL.setText("")
+            ngay = "day"
+            tinhtrang = "Nghỉ"
+            kt = ip.DAL_DiemDanh.AddSinhVienDiemDanh(ngay,tenlh,gvql,masv,tensv,tinhtrang)
+
         else:
             QMessageBox.information(self, "Thông báo", "Thêm sinh viên vào lớp thất bại")  
 
@@ -648,6 +690,162 @@ class MyWindow(QMainWindow,Ui_MainWindow):
         else:
             QMessageBox.information(self, "Thông báo", "Xóa sinh viên thất bại")
 
+
+#__________________________________________________________________________
+#Diem Danh Sinh Vien
+
+#Update Combobox 
+    def ShowAllLopHocInComBoBoxDD(self):
+        self.ccb_lopHocDD.clear()
+        self.txt_giangVienDD.clear()
+
+        self.lopHocData = ip.DAL_LopHoc.ShowAllLopHoc()
+
+        for lopHoc in self.lopHocData:
+            self.ccb_lopHocDD.addItem(str(lopHoc[2])) 
+
+        self.ccb_lopHocDD.currentIndexChanged.connect(self.updateGiangVienDD)
+
+    def updateGiangVienDD(self):
+        index = self.ccb_lopHocDD.currentIndex()
+
+        if index >= 0 and index < len(self.lopHocData):
+            self.txt_giangVienDD.setText(str(self.lopHocData[index][1]))
+
+#Show All sinh vien diem danh
+    def ShowAllSinhVienDD(self):
+        tenlh = self.ccb_lopHocDD.currentText() 
+        self.tbl_danhSachDD.setRowCount(ip.DAL_DiemDanh.ShowAllSinhVienDDInClass(tenlh).__len__())        
+        self.tbl_danhSachDD.setColumnCount(6)
+        self.tbl_danhSachDD.setHorizontalHeaderLabels(["Ngày", "Lớp học","Giảng viên", "Mã sinh viên", "Tên sinh viên", "Tình trạng"]) 
+        self.tbl_danhSachDD.setColumnWidth(1, 70)
+        self.tbl_danhSachDD.setColumnWidth(5, 150)
+        table_row = 0
+        for row in ip.DAL_DiemDanh.ShowAllSinhVienDDInClass(tenlh):
+            self.tbl_danhSachDD.setItem(table_row, 0, ip.QTableWidgetItem(str(row[1])))
+            self.tbl_danhSachDD.setItem(table_row, 1, ip.QTableWidgetItem(str(row[2])))
+            self.tbl_danhSachDD.setItem(table_row, 2, ip.QTableWidgetItem(str(row[3])))
+            self.tbl_danhSachDD.setItem(table_row, 3, ip.QTableWidgetItem(str(row[4])))
+            self.tbl_danhSachDD.setItem(table_row, 4, ip.QTableWidgetItem(str(row[5])))
+            self.tbl_danhSachDD.setItem(table_row, 5, ip.QTableWidgetItem(str(row[6])))
+            table_row += 1
+
+#Funtion One Click index table
+    def OneClickSinhVienDD(self,row,collum):
+        self.txt_ngayDD.setText(self.tbl_danhSachDD.item(row, 0).text())
+        self.txt_masvDD.setText(self.tbl_danhSachDD.item(row,3).text())
+        self.txt_tensvDD.setText(self.tbl_danhSachDD.item(row,4).text())
+        tinhtrang = self.tbl_danhSachDD.item(row, 5).text().strip().lower()
+        index = -1
+        if tinhtrang == "có mặt":
+            index = 0 
+        elif tinhtrang == "đi muộn":
+            index = 1 
+        elif tinhtrang == "nghỉ":
+            index = 2 
+        if index != -1:
+            self.ccb_tinhTrang.setCurrentIndex(index)
+        
+
+#Funtion xac thuc faceID
+    def ReturnDataFaceID(self,new_face_encoding):
+        try:
+            masv = self.txt_masvDD.text()
+            face_encodings = ip.DAL_DiemDanh.XacThucFaceIDSinhVien(masv)
+
+            for masv, stored_encoding in face_encodings.items():
+                matches = face_recognition.compare_faces([stored_encoding], new_face_encoding)
+                if matches[0]:
+                    return masv  
+        
+            return None  
+
+        except Exception as e:
+            print(f"Lỗi khi so sánh khuôn mặt: {e}")
+            return None
+
+    def XacThucFaceIDSinhVien(self):
+        cap = cv2.VideoCapture(0)
+        if not cap.isOpened():
+            QMessageBox.warning(self, "Lỗi", "Không thể mở camera!")
+            return
+
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                QMessageBox.warning(self, "Lỗi", "Không thể đọc khung hình từ camera!")
+                break
+
+            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Nhận diện 
+            face_locations = face_recognition.face_locations(rgb_frame)
+            face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
+
+            for face_location, face_encoding in zip(face_locations, face_encodings):
+                top, right, bottom, left = face_location
+                cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+
+            # So sánh
+                masv = self.ReturnDataFaceID(face_encoding)
+
+                if masv:
+                    QMessageBox.information(self, "Thông báo", f"Khuôn mặt khớp với sinh viên Mã SV: {masv}")
+                    cap.release()
+                    cv2.destroyAllWindows()
+                    return
+                else:
+                    QMessageBox.warning(self, "Thông báo", "Không tìm thấy khuôn mặt khớp!")
+        
+            cv2.imshow("Face Authentication", frame)
+
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+
+        cap.release()
+        cv2.destroyAllWindows()
+
+#Funtion Diem danh sinh vien
+    def DiemDanhSinhVien(self):
+        day = self.txt_ngayDD.text()
+        lophoc = self.ccb_lopHocDD.currentText()
+        giangVien = self.txt_giangVienDD.text()
+        masv = self.txt_masvDD.text()
+        tensv = self.txt_tensvDD.text()
+        tinhTrang = self.ccb_tinhTrang.currentText()
+
+        if not day or not lophoc or not giangVien or not masv or not tensv or not tinhTrang:
+            QMessageBox.warning(self, "Thông báo", "Vui lòng nhập đầy đủ thông tin!")
+            return
+
+        kt = ip.DAL_DiemDanh.DiemDanhSinhVien(day,lophoc,giangVien,masv,tensv,tinhTrang)
+        if kt == 1:
+            QMessageBox.information(self, "Thông báo", "Đã lưu thông tin điểm danh")
+            self.ShowAllSinhVienDD()
+            self.txt_ngayDD.setText("")
+            self.txt_masvDD.setText("")
+            self.txt_tensvDD.setText("")
+            self.ccb_tinhTrang.setCurrentText("")
+        else:
+            QMessageBox.warning(self, "Thông báo", "Điểm danh thất bại")
+
+
+#Funtion xuat ra file Excel
+    def XuatFileExcel(self):
+        tenlophoc = self.ccb_lopHocDD.currentText() 
+        ngay = self.txt_ngayDD.text()
+        df = ip.DAL_DiemDanh.XuatExcel(tenlophoc) 
+        ngay = ngay.replace('/', '_').replace('\\', '_').replace(':', '_')
+
+        if not df.empty:
+            file_path = 'DiemDanh_' + tenlophoc + ngay + '.xlsx' 
+            df.to_excel(file_path, index=False)  
+            QMessageBox.information(self, "Thông báo", f"File Excel đã được xuất ra: {file_path}")
+        else:
+            QMessageBox.warning(self, "Cảnh báo", "Không có dữ liệu để xuất.")
+        ip.DAL_DiemDanh.SetTextTinhTrang()
+        ip.DAL_DiemDanh.ShowAllSinhVienDDInClass(tenlophoc)
+        
 #__________________________________________________________________________
 #Chuong trinh chay dau tien
 app = ip.QApplication(ip.sys.argv)
