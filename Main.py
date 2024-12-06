@@ -751,20 +751,20 @@ class MyWindow(QMainWindow,Ui_MainWindow):
 #Funtion xac thuc faceID
     def ReturnDataFaceID(self, new_face_encoding):
         try:
-            input_masv = self.txt_masvDD.text()  # Lưu mã sinh viên đầu vào
-            face_encodings = ip.DAL_DiemDanh.XacThucFaceIDSinhVien(input_masv)
+            masv = self.txt_masvDD.text()
+            face_encodings = ip.DAL_DiemDanh.XacThucFaceIDSinhVien(masv)
 
-        # Lặp qua danh sách mã sinh viên và face_encoding
-            for stored_masv, stored_encoding in face_encodings.items():
-                matches = face_recognition.compare_faces([stored_encoding], new_face_encoding)
-                if matches[0]:
-                    return stored_masv  # Trả về mã sinh viên khớp
-
-            return None  # Nếu không có sinh viên nào khớp
+            for masv, stored_encoding in face_encodings.items():
+                # Kiểm tra độ chính xác với face_distance
+                face_distance = face_recognition.face_distance([stored_encoding], new_face_encoding)[0]
+                if face_distance < 0.3: 
+                    return masv
+            return None  
 
         except Exception as e:
             print(f"Lỗi khi so sánh khuôn mặt: {e}")
             return None
+
 
     def XacThucFaceIDSinhVien(self):
         cap = cv2.VideoCapture(0)
@@ -788,16 +788,15 @@ class MyWindow(QMainWindow,Ui_MainWindow):
                 top, right, bottom, left = face_location
                 cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
 
-            # So sánh
                 masv = self.ReturnDataFaceID(face_encoding)
-
                 if masv:
                     QMessageBox.information(self, "Thông báo", f"Khuôn mặt khớp với sinh viên Mã SV: {masv}")
                     cap.release()
                     cv2.destroyAllWindows()
                     return
                 else:
-                    QMessageBox.warning(self, "Thông báo", "Không tìm thấy khuôn mặt khớp!")
+                    QMessageBox.warning(self, "Lỗi", "Không tìm thấy khuôn mặt khớp!")
+
         
             cv2.imshow("Face Authentication", frame)
 
