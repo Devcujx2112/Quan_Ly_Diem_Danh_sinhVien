@@ -687,6 +687,7 @@ class MyWindow(QMainWindow,Ui_MainWindow):
             self.DanhSachSinhVienInClass()
             self.txt_tenSinhVienQL.setText("")
             self.txt_masvQL.setText("")
+            kt = ip.DAL_DiemDanh.DeleteSinhVienDiemDanh(masv)
         else:
             QMessageBox.information(self, "Thông báo", "Xóa sinh viên thất bại")
 
@@ -748,17 +749,18 @@ class MyWindow(QMainWindow,Ui_MainWindow):
         
 
 #Funtion xac thuc faceID
-    def ReturnDataFaceID(self,new_face_encoding):
+    def ReturnDataFaceID(self, new_face_encoding):
         try:
-            masv = self.txt_masvDD.text()
-            face_encodings = ip.DAL_DiemDanh.XacThucFaceIDSinhVien(masv)
+            input_masv = self.txt_masvDD.text()  # Lưu mã sinh viên đầu vào
+            face_encodings = ip.DAL_DiemDanh.XacThucFaceIDSinhVien(input_masv)
 
-            for masv, stored_encoding in face_encodings.items():
+        # Lặp qua danh sách mã sinh viên và face_encoding
+            for stored_masv, stored_encoding in face_encodings.items():
                 matches = face_recognition.compare_faces([stored_encoding], new_face_encoding)
                 if matches[0]:
-                    return masv  
-        
-            return None  
+                    return stored_masv  # Trả về mã sinh viên khớp
+
+            return None  # Nếu không có sinh viên nào khớp
 
         except Exception as e:
             print(f"Lỗi khi so sánh khuôn mặt: {e}")

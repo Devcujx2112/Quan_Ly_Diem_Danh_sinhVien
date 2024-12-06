@@ -34,16 +34,18 @@ def XacThucFaceIDSinhVien(masv):
     try:
         conn = DAL_Connect.connect_db()
         cs = conn.cursor()
-        query = "SELECT masv, face FROM tbl_sinhvien"
-        cs.execute(query)
+
+        query = "SELECT masv, face FROM tbl_sinhvien WHERE masv = %s"
+        cs.execute(query, (masv,))
         
-        #{masv: faceID}
         face_encodings = {}
         for row in cs.fetchall():
-            masv, faceID = row
-            if faceID:
-                # mảng numpy
-                face_encodings[masv] = np.array(json.loads(faceID))
+            if len(row) == 2:  
+                masv, faceID = row
+                if faceID:
+                    face_encodings[masv] = np.array(json.loads(faceID))
+            else:
+                print(f"Dữ liệu không hợp lệ: {row}")
         
         return face_encodings
 
@@ -55,6 +57,7 @@ def XacThucFaceIDSinhVien(masv):
         if conn.is_connected():
             cs.close()
             conn.close()
+
 
 def DiemDanhSinhVien(ngay, lophoc, giangvien, masv, tensv, tinhtrang):
     try:
@@ -112,3 +115,15 @@ def XuatExcel(tenlh):
         return pd.DataFrame()
     finally:
         conn.close()
+
+def DeleteSinhVienDiemDanh(masv):
+    try:    
+        conn = DAL_Connect.connect_db()
+        cs = conn.cursor()
+        query = "DELETE FROM tbl_diemdanh WHERE masv = %s"
+        cs.execute(query,(masv,))
+        conn.commit()
+        conn.close()
+        return cs.rowcount
+    except Exception as e:
+        print(f"Error: {e}")    
